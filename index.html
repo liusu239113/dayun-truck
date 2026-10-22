@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#00b578">
+<title>大运卡车模拟：从一清二白到世界首富</title>
+<link rel="stylesheet" href="DebugLogger/DebugLogger.css">
+<style>
+/* 调试悬浮球隐藏开关（DebugLogger 绿色圆钮）：要恢复调试入口，删掉本行即可 */
+#debug-logger-container{display:none}
+:root{--gr:#00b578;--gr2:#009f6a;--or:#ff7a1f;--pr:#ff5000;--bg:#eef1f5;--cd:#fff;--tx:#222;--sub:#8a929c;--line:#e8ecf0;--red:#e64340;--blue:#4a90d9}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;background:#23282e;color:var(--tx);overflow:hidden}
+button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
+#stage{position:relative;max-width:430px;height:100dvh;margin:0 auto;background:var(--bg);overflow:hidden;display:flex;flex-direction:column}
+@media(min-width:431px){#stage{margin-top:14px;height:calc(100dvh - 28px);border-radius:26px;box-shadow:0 24px 70px rgba(0,0,0,.55)}}
+.hide{display:none!important}
+.muted{color:var(--sub);font-size:11px}
+.price{color:var(--pr);font-weight:700}
+.row{display:flex;align-items:center}
+.grow{flex:1}
+
+/* ===== 顶部栏 ===== */
+#tbar{background:linear-gradient(160deg,#0fae74,#068a5b);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;flex:none}
+.trow1{display:flex;align-items:center;gap:9px}
+.tava{width:44px;height:44px;border-radius:50%;background:#fff;color:var(--gr);font-weight:800;font-size:19px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.7)}
+.tinfo{flex:1;min-width:0}
+.tname{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px}
+.lvtag{background:#ffe9c8;color:#9a6b1f;font-size:10px;padding:1px 5px;border-radius:6px;font-weight:700}
+.tsub{font-size:11px;opacity:.85;margin-top:2px}
+.tbtns{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.gearbtn{font-size:17px;opacity:.9;padding:2px 4px}
+.chip{font-size:10px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.45);padding:2px 8px;border-radius:20px;white-space:nowrap}
+.trow2{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:12px}
+.wxchip{background:rgba(255,255,255,.16);padding:3px 8px;border-radius:8px}
+.tbal{margin-left:auto;font-size:15px;font-weight:800}
+.tbal small{font-weight:400;font-size:10px;opacity:.8;margin-right:3px}
+.trow3{display:flex;gap:10px;margin-top:9px;align-items:center}
+.sb{flex:1;min-width:0}
+.sb .sb-t{display:flex;justify-content:space-between;font-size:10px;opacity:.9;margin-bottom:3px}
+.sb .sb-t b{font-weight:600}
+.sb .track{height:5px;background:rgba(0,0,0,.22);border-radius:4px;overflow:hidden}
+.sb .fill{height:100%;border-radius:4px;background:#aef3d3;transition:width .4s}
+.sb.warn .fill{background:#ffd77e}
+.sb.bad .fill{background:#ff9f92}
+.restbtn{flex:none;background:#fff;color:var(--gr);font-weight:700;font-size:12px;padding:7px 13px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+
+/* ===== 主视图 ===== */
+#views{flex:1;overflow:hidden;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;padding:12px 12px 20px;scrollbar-width:none}
+.view::-webkit-scrollbar{display:none}
+.newstick{background:#fff;border-radius:12px;padding:8px 12px;font-size:11px;color:#6b7280;display:flex;gap:8px;align-items:center;margin-bottom:10px;box-shadow:0 1px 4px rgba(31,41,55,.05)}
+.newstick .ns{color:var(--or);font-weight:700;flex:none}
+
+/* 订单卡片 */
+.ocard{background:#fff;border-radius:14px;padding:13px 13px 11px;margin-bottom:10px;box-shadow:0 1px 5px rgba(31,41,55,.06)}
+.ohead{display:flex;gap:9px}
+.oava{width:38px;height:38px;border-radius:50%;color:#fff;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.owho{flex:1;min-width:0}
+.oname{font-size:14px;font-weight:700;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.ostar{color:#ff9d00;font-size:11px;font-weight:600}
+.otag{font-size:9px;padding:1px 5px;border-radius:5px;background:#e8f7f0;color:var(--gr);font-weight:700}
+.otag.hot{background:#ffece2;color:var(--or)}
+.otag.sub{background:#fff3d6;color:#b07a12}
+.hallrow{border:1px solid #e8eaee;border-radius:10px;padding:9px 10px;margin-bottom:8px}
+.invrow{display:flex;align-items:center;gap:8px;border:1px solid #e8eaee;border-radius:10px;padding:9px 10px;margin-bottom:8px;background:#fff}
+.invmain{flex:1;min-width:0}
+.invmain b{font-size:13px}
+.invmain span{display:block;font-size:11px;color:#667}
+.invpos{font-size:10.5px;color:#8a929c;text-align:right;max-width:42%}
+.invbtns{display:flex;gap:6px}
+.invbtns .btn{padding:6px 12px;font-size:12px}
+.scratch-wrap{position:relative;margin-top:10px;border-radius:12px;overflow:hidden;background:linear-gradient(150deg,#123f31,#0c2c22);text-align:center;color:#fff}
+.scratch-wrap .prize{font-size:20px;font-weight:800;padding:24px 0}
+#scratchCv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.otag.good{background:#e7f0ff;color:#1a73e8}
+.otag.gold{background:#fdf3d1;color:#c08a00}
+.ocard.lux{border:1.5px solid #f2b53c;box-shadow:0 1px 8px rgba(242,181,60,.35)}
+.ocard.retur{border:1.5px dashed #7ec2a5}
+.osub{font-size:11px;color:var(--sub);margin-top:3px}
+.oprice{text-align:right;flex:none}
+.oprice b{font-size:18px;color:var(--pr)}
+.oprice span{display:block;font-size:9px;color:var(--sub);margin-top:1px}
+.oprice em{display:block;font-style:normal;font-size:9px;color:#b07a12;margin-top:1px}
+.oroute{margin:10px 2px 0;border-left:0;position:relative;padding-left:16px}
+.oroute::before{content:'';position:absolute;left:4.5px;top:10px;bottom:10px;width:0;border-left:1.5px dashed #d6dce2}
+.oline{position:relative;padding:5px 0;font-size:13px;font-weight:600}
+.oline .nd{position:absolute;left:-16px;top:9px;width:9px;height:9px;border-radius:50%}
+.oline .nd.o{background:var(--or)}
+.oline .nd.g{background:var(--gr);border-radius:2px}
+.oline small{display:block;font-size:10px;color:var(--sub);font-weight:400;margin-top:1px}
+.oline small b{color:#e64340;font-weight:600}
+.onote{font-size:11px;color:#6b7280;background:#f6f8fa;border-radius:8px;padding:7px 9px;margin-top:8px}
+.obtns{display:flex;gap:9px;margin-top:10px}
+.btn{flex:1;padding:10px 0;border-radius:22px;font-size:13px;font-weight:700;text-align:center;transition:opacity .15s}
+.btn.pri{background:var(--gr);color:#fff;box-shadow:0 3px 8px rgba(0,181,120,.3)}
+.btn.pri:active{opacity:.85}
+.btn.ghost{background:#f1f4f6;color:#444}
+.btn.or{background:var(--or);color:#fff}
+.btn.rd{background:#fff;color:var(--red);border:1px solid #f3c1c0}
+.btn:disabled{opacity:.4;pointer-events:none}
+.btn.sm{flex:none;padding:7px 16px;font-size:12px}
+.hintpulse{animation:hp 1.2s infinite;outline:2px solid #ffd77e;outline-offset:2px}
+@keyframes hp{50%{outline-color:transparent}}
+
+/* 地图（拟真地图风格） */
+#view-map{padding:0 0 20px}
+.mapwrap{position:relative;background:#f2f3ea;overflow:hidden;box-shadow:0 1px 5px rgba(31,41,55,.08);height:clamp(320px,60vh,520px)}
+.mapwrap svg{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.mloc{position:absolute;top:10px;left:10px;right:10px;z-index:3;background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(31,41,55,.18);padding:9px 12px;font-size:12.5px;color:#3c4450;display:flex;align-items:center;gap:6px;pointer-events:none}
+.mloc .mpin{font-size:14px}
+.mloc b{font-weight:700;color:#1f2730}
+.mloc-r{margin-left:auto;font-size:10.5px;color:#8a9199;white-space:nowrap}
+.mzoom{position:absolute;top:58px;left:10px;z-index:3;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(31,41,55,.2);display:flex;flex-direction:column;overflow:hidden}
+.mzoom button{width:34px;height:32px;font-size:16px;color:#3c4450;font-weight:700;line-height:1}
+.mzoom button:first-child{border-bottom:1px solid #eef0f2}
+.mlocate{position:absolute;right:10px;bottom:12px;z-index:3;width:38px;height:38px;background:#fff;border-radius:50%;box-shadow:0 2px 8px rgba(31,41,55,.22);font-size:19px;color:#1a73e8;line-height:1}
+.mlegend{position:absolute;left:10px;bottom:12px;z-index:3;background:rgba(255,255,255,.92);border-radius:9px;padding:5px 10px;font-size:9.5px;color:#5c6b62;display:flex;gap:9px;align-items:center;box-shadow:0 1px 4px rgba(31,41,55,.12)}
+.mlegend i{display:inline-block;width:13px;height:3px;border-radius:2px;margin-right:3px;vertical-align:middle}
+.cinfo{background:#fff;border-radius:14px;margin:10px 12px 0;padding:13px;box-shadow:0 1px 5px rgba(31,41,55,.06)}
+.cinfo h3{font-size:15px;display:flex;align-items:center;gap:8px}
+.cinfo .crow{display:flex;justify-content:space-between;font-size:12px;color:#555;margin-top:7px}
+
+/* 行程中：地图上的行程进度卡 */
+.jcard{background:#fff;border-radius:14px;margin:10px 12px 0;padding:12px 13px;box-shadow:0 1px 5px rgba(31,41,55,.06)}
+.jhead{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.jhead b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jstate{flex:none;font-size:10px;font-weight:700;color:#0a8f60;background:#e8f7f0;border-radius:6px;padding:2px 8px}
+.jstate.paused{color:#b07a12;background:#fff3d6}
+.jprog{position:relative;height:7px;background:#edf0f3;border-radius:4px;margin-top:11px}
+.jprog>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#38d9a0,#0abf7e);border-radius:4px;transition:width .2s linear}
+.jprog .jmarks{position:absolute;inset:0;pointer-events:none}
+.jprog .jmarks i{position:absolute;top:-1px;height:9px;width:2px;margin-left:-1px;background:#c9d1d8;border-radius:1px}
+.jprog .jmarks i.toll{background:#ffb02e}
+.jprog .jmarks i.sa{background:#4aa3ff;width:4px;margin-left:-2px;border-radius:2px}
+.jprog .jmarks i.br{background:#7a5fd0;width:4px;margin-left:-2px;border-radius:2px}
+.jrow{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#66707a;margin-top:8px;line-height:1.5}
+.jrow b{color:#222}
+.jrow.warn{color:#e64340}
+.jctlrow{display:flex;gap:8px;margin-top:10px;align-items:center}
+.jseg{flex:1;display:flex;background:#f1f4f6;border-radius:10px;overflow:hidden}
+.jseg button{flex:1;padding:8px 0;font-size:11px;color:#667;color:var(--sub);font-weight:600}
+.jseg button.on{background:var(--gr);color:#fff;border-radius:10px}
+.jctl{flex:none;background:#f1f4f6;color:#3c4450;border-radius:10px;padding:8px 12px;font-size:11.5px;font-weight:700}
+.jctl.resume{background:var(--gr);color:#fff}
+
+/* 财务 */
+.bigcard{background:linear-gradient(150deg,#123f31,#0c2c22);color:#fff;border-radius:16px;padding:16px;margin-bottom:10px}
+.bigcard .bn{font-size:26px;font-weight:800;margin-top:3px}
+.bigcard .bnrow{display:flex;gap:22px;margin-top:12px}
+.bigcard .bnrow>div{flex:1}
+.bigcard .bnrow .bn2{font-size:17px;font-weight:700;margin-top:2px}
+.dprog{margin-top:13px}
+.dprog .track{height:7px;background:rgba(255,255,255,.18);border-radius:4px;overflow:hidden}
+.dprog .fill{height:100%;background:linear-gradient(90deg,#ffd77e,#ffb02e);border-radius:4px;transition:width .5s}
+.dprog p{font-size:10px;opacity:.75;margin-top:5px}
+.qgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:11px}
+.qbtn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);color:#fff;border-radius:9px;padding:7px 0;font-size:11px;font-weight:600}
+.ledger{background:#fff;border-radius:14px;padding:5px 13px;box-shadow:0 1px 5px rgba(31,41,55,.06)}
+.ledrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f3f5;font-size:12px}
+.ledrow:last-child{border:none}
+.ledrow .lt b{font-size:12.5px;display:block}
+.ledrow .lt span{font-size:10px;color:var(--sub)}
+.ledrow .lv{font-weight:700}
+.ledrow .lv.plus{color:var(--gr)}
+.ledrow .lv.minus{color:var(--red)}
+
+/* 娱乐 */
+@keyframes funPop{0%{transform:scale(.4);opacity:0}62%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+.funpop{animation:funPop .5s ease both}
+.funtag{display:inline-block;font-size:9px;padding:1px 5px;border-radius:5px;background:#f1e9ff;color:#7b2ff2;font-weight:700;margin-top:3px}
+
+/* 车辆 */
+.truckcard{background:linear-gradient(150deg,#17323f,#0e2129);color:#fff;border-radius:16px;padding:15px;margin-bottom:10px}
+.truckcard h3{font-size:16px}
+.truckcard .ts{font-size:11px;opacity:.7;margin-top:3px}
+.tstat2{display:flex;gap:10px;margin-top:12px}
+.tstat2>div{flex:1}
+.tstat2 .track{height:5px;background:rgba(255,255,255,.2);border-radius:4px;overflow:hidden;margin-top:4px}
+.tstat2 .fill{height:100%;background:#aef3d3;border-radius:4px}
+.tstat2 .fill.warn{background:#ffd77e}
+.tstat2 .fill.bad{background:#ff9f92}
+.tstats-nums{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.tsn{background:rgba(255,255,255,.1);border-radius:9px;padding:6px 10px;font-size:10px;opacity:.95}
+.tsn b{display:block;font-size:13px;margin-top:1px}
+.sect{background:#fff;border-radius:14px;padding:12px 13px;margin-bottom:10px;box-shadow:0 1px 5px rgba(31,41,55,.06)}
+.sect h4{font-size:13px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.sect h4 .r{font-size:10px;color:var(--sub);font-weight:400}
+.part{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f3f5}
+.part:last-child{border:none}
+.part .pi{width:36px;height:36px;background:#f2f6f4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.part .pm{flex:1;min-width:0}
+.part .pm b{font-size:13px;display:flex;gap:6px;align-items:center}
+.part .pm b .pn{font-size:11px;color:var(--gr);font-weight:600}
+.part .pm span{font-size:10.5px;color:var(--sub);display:block;margin-top:2px}
+.upbtn{flex:none;background:var(--gr);color:#fff;font-size:11px;font-weight:700;padding:7px 12px;border-radius:16px;white-space:nowrap}
+.upbtn.max{background:#e8ecef;color:#98a1a8}
+.upbtn.lock{background:#e8ecef;color:#98a1a8}
+.truckpick{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f1f3f5}
+.truckpick:last-child{border:none}
+.truckpick .tp-i{font-size:26px}
+.truckpick .tp-m{flex:1}
+.truckpick .tp-m b{font-size:13.5px}
+.truckpick .tp-m p{font-size:10.5px;color:var(--sub);margin-top:2px}
+.truckpick .cur{font-size:10px;color:var(--gr);font-weight:700}
+
+/* 更多 */
+.mlist{background:#fff;border-radius:14px;box-shadow:0 1px 5px rgba(31,41,55,.06);overflow:hidden}
+.mrow{display:flex;align-items:center;gap:10px;padding:13px;border-bottom:1px solid #f1f3f5;font-size:13px}
+.mrow:last-child{border:none}
+.mrow .mi{font-size:17px}
+.mrow .mv{margin-left:auto;color:var(--sub);font-size:11px}
+.switch{width:40px;height:22px;border-radius:12px;background:#d9dee2;position:relative;transition:background .2s;flex:none}
+.switch.on{background:var(--gr)}
+.switch i{position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s}
+.switch.on i{left:20px}
+.achv{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f3f5;align-items:center}
+.achv:last-child{border:none}
+.achv .ai{width:38px;height:38px;border-radius:50%;background:#f1f4f6;display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.achv.done .ai{background:linear-gradient(150deg,#ffe9c2,#ffd07a)}
+.achv b{font-size:12.5px;display:block}
+.achv span{font-size:10.5px;color:var(--sub)}
+.achv:not(.done){opacity:.55}
+
+/* 底部导航 */
+#navbar{flex:none;display:flex;background:#fff;border-top:1px solid #eceff2;padding-bottom:env(safe-area-inset-bottom)}
+.nitem{flex:1;text-align:center;padding:7px 0 8px;position:relative;color:#9aa3ab}
+.nitem .ni{font-size:20px;line-height:1.1;display:block}
+.nitem .nt{font-size:10.5px;font-weight:600;margin-top:2px;display:block}
+.nitem.on{color:var(--gr)}
+.nitem .badge{position:absolute;top:4px;right:calc(50% - 22px);width:8px;height:8px;background:var(--red);border-radius:50%;border:1.5px solid #fff}
+
+/* 弹窗 */
+#modals{position:absolute;inset:0;z-index:200;pointer-events:none} /* 高于 #title(90)/#end(95)：标题页的槽位选择等弹窗不能被压在下面 */
+.mwrap{position:absolute;inset:0;background:rgba(10,16,14,.5);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .22s;pointer-events:auto}
+.mwrap.center{align-items:center;padding:24px}
+.mwrap.on{opacity:1}
+.sheet{background:#fff;width:100%;border-radius:18px 18px 0 0;padding:17px 16px calc(env(safe-area-inset-bottom) + 16px);max-height:82%;overflow-y:auto;transform:translateY(30px);transition:transform .22s}
+.mwrap.on .sheet{transform:none}
+.mwrap.center .sheet{border-radius:18px;max-width:360px;width:100%;transform:scale(.94)}
+.mwrap.center.on .sheet{transform:none}
+.sheet h3{font-size:16px;margin-bottom:4px}
+.sheet .mtag{display:inline-block;font-size:10px;background:#e8f7f0;color:var(--gr);border-radius:6px;padding:2px 7px;font-weight:700;margin-bottom:6px}
+.sheet .mbody{font-size:12.5px;color:#555;line-height:1.65}
+.mbtns{display:flex;gap:9px;margin-top:15px}
+.setl{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px dashed #edf0f2}
+.setl.total{border:none;font-weight:800;font-size:14px;padding-top:10px}
+.setl .plus{color:var(--gr);font-weight:700}
+.setl .minus{color:var(--red);font-weight:700}
+.seg{display:flex;background:#f1f4f6;border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;padding:7px 0;border-radius:8px;font-size:11.5px;font-weight:600;color:#7a8288}
+.seg button.on{background:#fff;color:var(--gr);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.routeopt{border:1.5px solid #e8ecf0;border-radius:13px;padding:12px;margin-bottom:9px;transition:border-color .15s}
+.routeopt.on{border-color:var(--gr);background:#f4fbf8}
+.routeopt .rh{display:flex;align-items:center;gap:7px}
+.routeopt .rh b{font-size:14px}
+.routeopt .rh .rt{font-size:9px;background:var(--gr);color:#fff;border-radius:5px;padding:1.5px 6px;font-weight:700}
+.routeopt .rh .price{margin-left:auto;font-size:0}
+.routeopt .rg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:9px;font-size:10.5px;color:#666}
+.routeopt .rg b{display:block;font-size:12px;color:#222}
+.routeopt .deadline{margin-top:8px;font-size:11px}
+.routeopt .deadline.ok{color:var(--gr)}
+.routeopt .deadline.bad{color:var(--red)}
+
+/* 提示 */
+#toasts{position:absolute;top:calc(env(safe-area-inset-top) + 64px);left:0;right:0;z-index:210;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:none}
+.toast{background:rgba(20,26,24,.92);color:#fff;font-size:12px;padding:9px 16px;border-radius:20px;max-width:86%;text-align:center;animation:tin .25s;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.toast.money{color:#ffe9b8}
+@keyframes tin{from{transform:translateY(-8px);opacity:0}}
+#drive:not(.hide)~#toasts{top:calc(env(safe-area-inset-top) + 132px)}
+
+/* ===== 驾驶中（第一人称驾驶舱） ===== */
+#drive{position:absolute;inset:0;z-index:40;overflow:hidden;background:#0c1118;color:#fff;user-select:none;-webkit-user-select:none}
+#roadCv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.dvprog{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(0,0,0,.35);z-index:6}
+.dvprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#38d9a0,#ffe066);transition:width .2s linear}
+.dvprog span{position:absolute;inset:0;pointer-events:none}
+.dvprog span i{position:absolute;top:0;height:5px;width:2px;margin-left:-1px;background:rgba(255,255,255,.55)}
+.dvprog span i.toll{background:#ffd77e}
+.dvprog span i.sa{background:#4aa3ff;width:4px;margin-left:-2px;border-radius:0 0 2px 2px}
+.dvprog span i.br{background:#b39ddb;width:4px;margin-left:-2px;border-radius:0 0 2px 2px}
+#drive.dashNight .dv-dash{background:linear-gradient(180deg,#1b212b 0%,#11151c 40%,#0a0d12 100%)}
+#drive.dashNight .dv-speedbox b{color:#ffe9b8;text-shadow:0 0 14px rgba(255,205,110,.35)}
+.dv-tl{position:absolute;top:14px;left:12px;z-index:5;width:132px;background:rgba(14,20,26,.72);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 11px;backdrop-filter:blur(3px)}
+.dv-order{font-size:10px;opacity:.75;line-height:1.5;margin-bottom:5px}
+.dv-dest{font-size:15px;font-weight:800;letter-spacing:.5px}
+.dv-remain{margin-top:1px}
+.dv-remain b{font-size:26px;font-weight:800;line-height:1.1}
+.dv-remain span{font-size:11px;opacity:.7;margin-left:2px}
+.dv-cond{display:flex;justify-content:space-between;font-size:10px;opacity:.85;margin-top:7px}
+.dv-cond b{font-weight:700}
+.dv-condbar{height:4px;background:rgba(255,255,255,.18);border-radius:3px;margin-top:3px;overflow:hidden}
+.dv-condbar i{display:block;height:100%;width:100%;background:#8fe6b8;border-radius:3px;transition:width .3s}
+.dv-condbar i.warn{background:#ffd77e}
+.dv-condbar i.bad{background:#ff9f92}
+.dv-mini{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:9.5px;opacity:.8;margin-top:7px}
+.dv-mini b{font-weight:700}
+.dv-eta{font-size:9.5px;opacity:.7;margin-top:6px;line-height:1.5}
+.dv-mirror{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:5;width:156px;background:#101820;border:3px solid #2b333d;border-radius:12px;padding:3px 3px 1px;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.dv-mirror canvas{display:block;width:100%;border-radius:8px;background:#0a0f14}
+.dv-mirror span{display:block;text-align:center;font-size:8px;letter-spacing:6px;color:#7d8b99;padding:2px 0 3px}
+.dv-side{position:absolute;right:12px;top:36%;z-index:5;display:flex;flex-direction:column;gap:12px}
+.dv-side button{width:58px;height:58px;border-radius:16px;background:rgba(20,30,38,.85);border:2.5px solid #e9e2c8;color:#e9e2c8;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.dv-side button:active{transform:scale(.93)}
+.dv-side button.off{opacity:.45;border-color:rgba(233,226,200,.4)}
+.dv-navlog{position:absolute;left:12px;right:120px;bottom:236px;z-index:5;max-height:88px;overflow:hidden;font-size:11.5px;line-height:1.75;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+.dv-navlog p{opacity:.62;margin:0}
+.dv-navlog p:first-child{opacity:1;color:#dff7ea}
+.dv-navlog .sys{color:#9fd8ff}
+.dv-ctrl2{position:absolute;left:12px;right:12px;bottom:190px;z-index:6;display:flex;gap:8px;align-items:center}
+.dv-ctrl2 .seg{flex:1;background:rgba(10,16,20,.6);border:1px solid rgba(255,255,255,.14)}
+.dv-ctrl2 .seg button{color:rgba(255,255,255,.75);padding:8px 0;font-size:11px}
+.dv-ctrl2 .seg button.on{background:rgba(233,226,200,.92);color:#20303c}
+.dv-ctrl2 .mini2{display:flex;gap:6px}
+.dv-ctrl2 .mini2 button{background:rgba(10,16,20,.6);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:9px;padding:9px 11px;font-size:11.5px;font-weight:700}
+.dv-ctrl2 .mini2 button.on{background:rgba(233,226,200,.92);color:#20303c;border-color:#e9e2c8}
+.dv-dash{position:absolute;left:0;right:0;bottom:0;height:178px;z-index:5;background:linear-gradient(180deg,#262c35 0%,#171b21 40%,#0d1014 100%);border-radius:34px 34px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.5);padding-top:10px}
+.fatlamp{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:800;letter-spacing:2px;color:#ffb4ab;border:1px solid rgba(230,67,64,.55);background:rgba(230,67,64,.18);border-radius:12px;padding:2px 12px;opacity:0;transition:opacity .25s;white-space:nowrap;pointer-events:none}
+.fatlamp.on{opacity:1;animation:fatpulse 1.1s ease-in-out infinite}
+@keyframes fatpulse{50%{background:rgba(230,67,64,.55);color:#fff}}
+.wheel{position:absolute;left:20px;top:34px;width:148px;height:148px;border-radius:50%;border:15px solid #333a45;background:radial-gradient(circle at 50% 42%,#3a4250,#232830 70%);box-shadow:inset 0 0 14px rgba(0,0,0,.6),0 6px 16px rgba(0,0,0,.45);transition:transform .25s ease-out;touch-action:none;cursor:grab;z-index:3}
+.wheel:active{cursor:grabbing;transition:none}
+.wheel::before{content:'';position:absolute;inset:8px;border-radius:50%;border:2px solid rgba(255,255,255,.06)}
+.wheel i{position:absolute;background:#3d4552;border-radius:4px}
+.wheel .s1{left:50%;top:8px;width:11px;height:52px;transform:translateX(-50%)}
+.wheel .s2{left:14px;bottom:26px;width:44px;height:11px;transform:rotate(32deg)}
+.wheel .s3{right:14px;bottom:26px;width:44px;height:11px;transform:rotate(-32deg)}
+.wheel b{position:absolute;left:50%;top:50%;width:40px;height:40px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 40% 35%,#4a5364,#2a303a);box-shadow:inset 0 2px 5px rgba(255,255,255,.12)}
+.dv-speedbox{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);text-align:center}
+.dv-speedbox b{font-size:46px;font-weight:800;line-height:1;letter-spacing:1px}
+.dv-speedbox span{display:block;font-size:11px;opacity:.65;margin-top:2px}
+.dv-speedbox em{display:block;font-style:normal;font-size:10px;color:#ffd77e;margin-top:4px;white-space:nowrap}
+.dv-speedbox .blk{position:absolute;top:14px;font-style:normal;font-size:19px;color:rgba(255,255,255,.14)}
+.dv-speedbox .blk.l{left:-56px}
+.dv-speedbox .blk.r{right:-56px}
+.dv-speedbox .blk.on{color:#ffcf4d}
+.pedals{position:absolute;right:16px;top:18px;display:flex;gap:10px}
+.pedal{width:74px;height:104px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:800;letter-spacing:2px;transition:transform .1s}
+.pedal i{font-style:normal;font-size:20px;line-height:1;letter-spacing:0}
+.pedal.brake{background:#22403e;border:2.5px solid #e9e2c8;color:#e9e2c8}
+.pedal.gas{background:#efe3c4;border:2.5px solid #d9c9a0;color:#5c5340}
+.pedal.press{transform:translateY(6px) scale(.95)}
+.pedal.brake.press{background:#2f5a56}
+
+/* 标题页 / 结局 */
+#title{position:absolute;inset:0;z-index:90;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(165deg,#0d5c40 0%,#0a3d2c 55%,#07281d 100%);color:#fff;padding:30px}
+#title .big{font-size:64px;filter:drop-shadow(0 10px 20px rgba(0,0,0,.45))}
+#title h1{font-size:25px;letter-spacing:1px;margin-top:18px;line-height:1.45}
+#title h2{font-size:14px;font-weight:400;opacity:.85;margin-top:8px;letter-spacing:2px}
+#title .tcard{margin-top:26px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:13px 18px;font-size:11.5px;line-height:1.9;opacity:.92;max-width:300px}
+#title .tbtns{margin-top:26px;width:76%;max-width:280px;display:flex;flex-direction:column;align-items:stretch;gap:11px}
+#title .tbtns button{padding:13px 0;border-radius:24px;font-size:15px;font-weight:700;background:#fff;color:#0a5c40}
+#title .tbtns button.ghost{background:rgba(255,255,255,.13);color:#fff;border:1px solid rgba(255,255,255,.3)}
+#title .ver{position:absolute;bottom:16px;font-size:10px;opacity:.5}
+#end{position:absolute;inset:0;z-index:95;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:30px;color:#fff}
+#end.win{background:linear-gradient(165deg,#b07b10,#d8971c 40%,#8a5f08)}
+#end.lose{background:linear-gradient(165deg,#37414a,#232a31)}
+#end .eicon{font-size:62px}
+#end h1{font-size:24px;margin-top:14px}
+#end .estat{margin-top:18px;background:rgba(0,0,0,.22);border-radius:14px;padding:14px 22px;font-size:12px;line-height:2;text-align:left}
+#end .ebtns{margin-top:22px;display:flex;gap:10px}
+#end .ebtns button{padding:11px 22px;border-radius:22px;font-weight:700;font-size:13px;background:#fff;color:#8a5f08}
+#end.lose .ebtns button{color:#232a31}
+
+/* ===== 深色模式（设置 → 黑色背景，body.dark） ===== */
+body.dark{--bg:#0f1318;--tx:#e6eaf0;--line:#272f3a}
+/* 主面板：卡片/列表/弹窗底色 */
+body.dark .newstick,body.dark .ocard,body.dark .cinfo,body.dark .jcard,body.dark .ledger,body.dark .sect,body.dark .mlist,body.dark .sheet{background:#1a1f26;box-shadow:0 1px 5px rgba(0,0,0,.45)}
+body.dark .newstick{color:#a7b1bd}
+body.dark #stage{background:var(--bg)}
+body.dark #tbar{background:linear-gradient(160deg,#0b5f43,#053b2b);box-shadow:0 1px 0 rgba(255,255,255,.04)}
+body.dark #navbar{background:#161b21;border-top-color:#222933}
+body.dark .nitem{color:#5f6a76}
+body.dark .nitem .badge{border-color:#161b21}
+body.dark .hallrow,body.dark .invrow,body.dark .routeopt{border-color:#272f3a}
+body.dark .invrow{background:#1a1f26}
+body.dark .onote{background:#212832;color:#9aa4b0}
+body.dark .otag{background:#173229}
+body.dark .otag.hot{background:#33231c}
+body.dark .otag.sub{background:#322a18}
+body.dark .otag.good{background:#1b2740}
+body.dark .otag.gold{background:#332b16}
+body.dark .funtag{background:#2b2440}
+body.dark .mrow,body.dark .part,body.dark .truckpick,body.dark .achv,body.dark .ledrow{border-bottom-color:#232a34}
+body.dark .btn.ghost{background:#272f3a;color:#c6cdd6}
+body.dark .btn.rd{background:#1a1f26;border-color:#5a3336}
+body.dark .upbtn.max,body.dark .upbtn.lock{background:#272f3a;color:#7d8794}
+body.dark .part .pi,body.dark .achv .ai{background:#232b35}
+body.dark .switch{background:#39434f}
+/* 行程进度卡 */
+body.dark .jprog{background:#272f3a}
+body.dark .jprog .jmarks i{background:#414c59}
+body.dark .jrow{color:#98a2ae}
+body.dark .jrow b{color:#e6eaf0}
+body.dark .jseg,body.dark .jctl{background:#272f3a}
+body.dark .jctl{color:#c6cdd6}
+body.dark .jstate{background:#173229}
+body.dark .jstate.paused{background:#322a18}
+/* 弹窗内分段/结算 */
+body.dark .seg{background:#272f3a}
+body.dark .seg button.on{background:#333d4a}
+body.dark .setl{border-bottom-color:#2a323d}
+body.dark .routeopt.on{background:#14261f}
+body.dark .sheet .mbody{color:#a7b1bd}
+body.dark .cinfo .crow{color:#a7b1bd}
+body.dark .routeopt .rg{color:#a7b1bd}
+body.dark .routeopt .rg b{color:#e6eaf0}
+/* 地图保持纸质风，整体反色成夜间图（文字/线条色相基本保留） */
+body.dark .mapwrap{filter:invert(.92) hue-rotate(180deg)}
+/* 模板里写死的花字提亮（内联 style 的深灰在暗底上看不清） */
+body.dark [style*="color:#222"]{color:#e6eaf0!important}
+body.dark [style*="color:#555"],body.dark [style*="color:#666"],body.dark [style*="color:#667"],body.dark [style*="color:#777"],body.dark [style*="color:#888"],body.dark [style*="color:#8a93a3"],body.dark [style*="color:#98a1a8"],body.dark [style*="color:#6b7280"]{color:#a7b1bd!important}
+body.dark [style*="border:1px solid #dfe5ec"]{border-color:#39434f!important}
+
+/* MFIX: 视口高度兜底 —— 原 #stage 只有 100dvh，旧 WebView 不支持 dvh 时会退化成
+   auto 高度，内容超出屏幕后被 body{overflow:hidden} 裁掉且滚不动。补 100% 兜底。 */
+#stage{height:100%;height:100dvh;min-height:0}
+#views{min-height:0}
+.view{-webkit-overflow-scrolling:touch}
+@media(min-width:431px){#stage{height:calc(100% - 28px);height:calc(100dvh - 28px)}}
+</style>
+</head>
+<body>
+<div id="debug-logger-container"></div>
+<div id="stage">
+  <!-- 顶部栏 -->
+  <div id="tbar" class="hide">
+    <div class="trow1">
+      <div class="tava" id="tAva">陈</div>
+      <div class="tinfo">
+        <div class="tname"><span id="tName">陈师傅</span> <span class="lvtag" id="tLv">Lv.1</span></div>
+        <div class="tsub" id="tSub">好评评分 5.0 · 第 1 天</div>
+      </div>
+      <div class="tbtns">
+        <button class="gearbtn" data-act="tab" data-tab="more">⚙️</button>
+      </div>
+    </div>
+    <div class="trow2">
+      <span class="wxchip" id="tWx">☀️ 晴 24°C</span>
+      <span id="tClock">08:00</span>
+      <div class="tbal"><small>余额</small><span id="tCash">¥0</span></div>
+    </div>
+    <div class="trow3">
+      <div class="sb" id="sbFuel"><div class="sb-t"><span>燃油</span><b>0%</b></div><div class="track"><div class="fill" style="width:0%"></div></div></div>
+      <div class="sb" id="sbWear"><div class="sb-t"><span>车况</span><b>0%</b></div><div class="track"><div class="fill" style="width:0%"></div></div></div>
+      <div class="sb" id="sbFat"><div class="sb-t"><span>精力</span><b>0%</b></div><div class="track"><div class="fill" style="width:0%"></div></div></div>
+      <button class="restbtn" data-act="rest">休息</button>
+    </div>
+  </div>
+
+  <!-- 主视图 -->
+  <div id="views" class="hide">
+    <div class="view" id="view-orders"></div>
+    <div class="view hide" id="view-map"></div>
+    <div class="view hide" id="view-finance"></div>
+    <div class="view hide" id="view-invest"></div>
+    <div class="view hide" id="view-garage"></div>
+    <div class="view hide" id="view-fun"></div>
+    <div class="view hide" id="view-depot"></div>
+    <div class="view hide" id="view-more"></div>
+    <div class="view hide" id="view-support"></div>
+  </div>
+
+  <!-- 底部导航 -->
+  <div id="navbar" class="hide">
+    <button class="nitem on" data-act="tab" data-tab="orders"><span class="ni">🚚</span><span class="nt">接单</span></button>
+    <button class="nitem" data-act="tab" data-tab="map"><span class="ni">🗺️</span><span class="nt">地图</span></button>
+    <button class="nitem" data-act="tab" data-tab="finance"><span class="ni">💰</span><span class="nt">财务</span></button>
+    <button class="nitem" data-act="tab" data-tab="invest"><span class="ni">📈</span><span class="nt">理财</span></button>
+    <button class="nitem" data-act="tab" data-tab="garage"><span class="ni">🛠️</span><span class="nt">车辆</span></button>
+    <button class="nitem" data-act="tab" data-tab="fun"><span class="ni">🎲</span><span class="nt">娱乐</span></button>
+    <button class="nitem" data-act="tab" data-tab="depot"><i class="badge hide" id="depotBadge"></i><span class="ni">📦</span><span class="nt">仓库</span></button>
+    <button class="nitem" data-act="tab" data-tab="more"><span class="ni">📋</span><span class="nt">更多</span></button>
+    <button class="nitem" data-act="tab" data-tab="support"><span class="ni">🤝</span><span class="nt">支持</span></button>
+  </div>
+
+  <!-- 驾驶界面（第一人称驾驶舱） -->
+  <div id="drive" class="hide">
+    <canvas id="roadCv"></canvas>
+    <div class="dvprog"><i id="dvProg"></i><span id="dvProgMarks"></span></div>
+    <div class="dv-tl">
+      <div class="dv-order" id="dvTitle">空驶中</div>
+      <div class="dv-dest" id="dvDest">—</div>
+      <div class="dv-remain"><b id="dvRemain">0</b><span> km</span></div>
+      <div class="dv-cond"><span>车辆完好度</span><b id="dvWearPct">100%</b></div>
+      <div class="dv-condbar"><i id="dvWearBar"></i></div>
+      <div class="dv-mini"><span>燃油 <b id="dvFuelPct">0%</b></span><span>精力 <b id="dvFatPct">0%</b></span><span id="dvGn">里程 0 km</span></div>
+      <div class="dv-eta" id="dvEta">预计 — 到达</div>
+    </div>
+    <div class="dv-mirror">
+      <canvas id="mirrorCv" width="150" height="60"></canvas>
+      <span>后 视 镜</span>
+    </div>
+    <div class="dv-side">
+      <button data-act="dlights" id="dvLightBtn" title="灯光">🔆</button>
+      <button data-act="dhorn" id="dvHornBtn" title="喇叭">📯</button>
+    </div>
+    <div class="dv-navlog" id="dvLog"></div>
+    <div class="dv-ctrl2">
+      <div class="seg" id="dvModeSeg">
+        <button data-act="dmode" data-m="eco">🐢 经济</button>
+        <button data-act="dmode" data-m="std" class="on">🚚 标准</button>
+        <button data-act="dmode" data-m="fast">🏎️ 快速</button>
+      </div>
+      <div class="mini2">
+        <button data-act="dcruise" id="dvCruiseBtn">🎯 巡航</button>
+        <button data-act="dspeed" id="dvTsBtn">⏩ ×2</button>
+      </div>
+    </div>
+    <div class="dv-dash">
+      <div class="fatlamp" id="dvFatLamp">⚠ 精力不足</div>
+      <div class="wheel" id="dvWheel"><i class="s1"></i><i class="s2"></i><i class="s3"></i><b></b></div>
+      <div class="dv-speedbox"><i class="blk l" id="dvBlinkL">◀</i><b id="dvSpeed">0</b><span>km/h</span><em id="dvNext">正在出发…</em><i class="blk r" id="dvBlinkR">▶</i></div>
+      <div class="pedals">
+        <button id="dvBrake" class="pedal brake"><i>≡</i>刹 车</button>
+        <button id="dvGas" class="pedal gas"><i>≡</i>油 门</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+  <div id="modals"></div>
+
+  <!-- 标题页 -->
+  <div id="title">
+    <div class="big">🚛</div>
+    <h1>大运卡车模拟</h1>
+    <h2>从一清二白到世界首富</h2>
+    <div class="tcard" id="titleCard">
+      你从父亲手里接过运输生意，也接过了他留下的 <b>1 亿债务</b>，和一辆二手大运卡车。<br>
+      跑高速干线，接货运单，过收费站，加油维修，改装升级。<br>
+      <b>还清 1 亿债务</b>，就是你的翻身之日——之后没有终点，想开多大生意都行。
+    </div>
+    <div class="tbtns" id="titleBtns"></div>
+    <div class="ver">虚拟世界 · 纯属虚构 · v1.0</div>
+  </div>
+</div>
+<!-- 存档系统（严格复用《存档系统技术文档》架构）：save/ 与 core/ 目录需与本文件一同打包上传 -->
+<!-- Lamps 开放平台 · 激励视频（由平台提供）：config / bridge / platform 三件套 -->
+<script>
+/* ===== lamps-config：作品 id（workSessionId 为字符串，供 forward_source 第一段使用）===== */
+window.LAMPS_CONFIG = window.LAMPS_CONFIG || { gameId: "", workSessionId: "" };
+window.LAMPS_CONFIG.workSessionId = "a5afa30e-de80-46af-a7ad-208e7079de75";
+if (window.LAMPS_CONFIG.workSessionId == null) { window.LAMPS_CONFIG.workSessionId = ""; }
+window.__LAMPS_GAME_ID__ = window.__LAMPS_GAME_ID__ || "";
+</script>
+<script>
+/* ===== lamps-bridge：激励视频 Bridge，只保留 lamps.ad.showRewardedVideo 与状态回调 ===== */
+(function (global) {
+  "use strict";
+
+  var METHOD_AD = "lamps.ad.showRewardedVideo";
+  var STATUS_EVENT = "lamps.ad.rewardedVideoStatus";
+  var LEGACY_STATUS_EVENT = "hoorah.ad.rewardedVideoStatus";
+
+  var ERR_MESSAGES = {
+    2001: "广告能力未就绪",
+    2002: "广告能力不可用",
+    2003: "暂无可用广告",
+    2004: "暂无可用广告",
+    2005: "激励视频进行中",
+    2006: "广告位非法",
+    2007: "获取广告失败",
+    2008: "广告加载超时",
+    2009: "广告加载失败"
+  };
+
+  var hostListeners = {};
+  var currentSettle = null;
+  var ourHandle = null;
+  var ourReceive = null;
+  var prevHandle = null;
+  var prevHupuHandle = null;
+  var prevReceive = null;
+  var hookTimer = null;
+  var messageHooked = false;
+  var ingestingFromHost = false;
+  var forwarding = false;
+  var SANDBOX_CHANNEL = "hoorah-minigame-sandbox";
+
+  function hasNativeBridge() {
+    try {
+      if (global.webkit && global.webkit.messageHandlers && global.webkit.messageHandlers.chatMessage) {
+        return true;
+      }
+    } catch (_) {}
+    try {
+      return !!(global.androidBridge && typeof global.androidBridge.postMessage === "function");
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function postToNative(payload) {
+    var ios = global.webkit && global.webkit.messageHandlers && global.webkit.messageHandlers.chatMessage;
+    if (ios) {
+      ios.postMessage(payload);
+      return;
+    }
+    if (global.androidBridge && typeof global.androidBridge.postMessage === "function") {
+      global.androidBridge.postMessage(payload);
+      return;
+    }
+    throw new Error("Bridge not available");
+  }
+
+  function asObject(raw) {
+    if (raw == null) return null;
+    if (typeof raw === "string") {
+      var text = raw.trim();
+      if (!text) return null;
+      try {
+        return JSON.parse(text);
+      } catch (_) {
+        return null;
+      }
+    }
+    if (typeof raw === "object") return raw;
+    return null;
+  }
+
+  function dispatchHostEvent(eventName, payload) {
+    var set = hostListeners[eventName];
+    if (!set) return;
+    for (var i = 0; i < set.length; i++) {
+      try {
+        set[i](payload);
+      } catch (_) {}
+    }
+  }
+
+  function isStatusEvent(name) {
+    return (
+      name === STATUS_EVENT ||
+      name === LEGACY_STATUS_EVENT ||
+      name === "rewardedVideoStatus"
+    );
+  }
+
+  function isOwnHandle(fn) {
+    if (!fn || typeof fn !== "function") return true;
+    if (fn === ourHandle || fn === ourReceive) return true;
+    if (fn.name === "onNativeHandle") return true;
+    return false;
+  }
+
+  function ingestStatusPayload(payload) {
+    dispatchHostEvent(STATUS_EVENT, payload);
+  }
+
+  function ingestNativeEnvelope(raw) {
+    var msg = asObject(raw);
+    if (!msg) return;
+
+    var method = msg.method || msg.event || msg.eventName || "";
+    if (isStatusEvent(method)) {
+      ingestStatusPayload(msg.params != null ? msg.params : msg.data != null ? msg.data : msg);
+      return;
+    }
+    if (msg.callbackName || (msg.params && msg.params.callbackName) || (msg.data && msg.data.callbackName)) {
+      ingestStatusPayload(msg);
+    }
+  }
+
+  function forwardToHost(eventName, payload) {
+    if (ingestingFromHost || forwarding) return;
+    forwarding = true;
+    try {
+      if (typeof prevHandle === "function" && !isOwnHandle(prevHandle)) {
+        prevHandle(eventName, payload);
+      }
+      if (
+        typeof prevHupuHandle === "function" &&
+        !isOwnHandle(prevHupuHandle) &&
+        prevHupuHandle !== prevHandle
+      ) {
+        prevHupuHandle(eventName, payload);
+      }
+    } catch (_) {
+    } finally {
+      forwarding = false;
+    }
+  }
+
+  function onNativeHandle(eventName, payload) {
+    if (eventName && typeof eventName === "object") {
+      ingestNativeEnvelope(eventName);
+    } else if (isStatusEvent(eventName)) {
+      ingestStatusPayload(payload);
+    } else {
+      ingestNativeEnvelope({ method: eventName, params: payload });
+    }
+    forwardToHost(eventName, payload);
+  }
+
+  function attachHandle(win, name) {
+    if (!win) return;
+    var bridge = win[name];
+    if (!bridge || typeof bridge !== "object") {
+      bridge = {};
+      try {
+        win[name] = bridge;
+      } catch (_) {
+        return;
+      }
+    }
+    if (bridge._handle_ && bridge._handle_ !== ourHandle && typeof bridge._handle_ === "function") {
+      if (!isOwnHandle(bridge._handle_)) {
+        if (name === "HoorahBridge") prevHandle = bridge._handle_;
+        if (name === "HupuBridge") prevHupuHandle = bridge._handle_;
+      }
+    }
+    if (bridge._handle_ !== ourHandle) {
+      try {
+        bridge._handle_ = ourHandle;
+      } catch (_) {}
+    }
+  }
+
+  function installOnWindow(win) {
+    if (!win) return;
+    attachHandle(win, "HoorahBridge");
+    attachHandle(win, "HupuBridge");
+    try {
+      win.__HOORAH_NATIVE_HANDLE__ = ourHandle;
+    } catch (_) {}
+    if (win.receiveNativeMessage !== ourReceive) {
+      if (typeof win.receiveNativeMessage === "function" && win.receiveNativeMessage !== ourReceive) {
+        if (!isOwnHandle(win.receiveNativeMessage)) {
+          prevReceive = win.receiveNativeMessage;
+        }
+      }
+      try {
+        win.receiveNativeMessage = ourReceive;
+      } catch (_) {}
+    }
+  }
+
+  function onWindowMessage(event) {
+    var data = event && event.data;
+    if (typeof data === "string") {
+      data = asObject(data);
+    }
+    if (!data || typeof data !== "object") return;
+    if (data.channel !== SANDBOX_CHANNEL) return;
+    if (data.type !== "native-bridge") return;
+    ingestingFromHost = true;
+    try {
+      onNativeHandle(data.eventName, data.payload);
+    } finally {
+      ingestingFromHost = false;
+    }
+  }
+
+  function installMessageHook() {
+    if (messageHooked) return;
+    messageHooked = true;
+    try {
+      global.addEventListener("message", onWindowMessage);
+    } catch (_) {}
+  }
+
+  function installBridgeHooks() {
+    if (!ourHandle) ourHandle = onNativeHandle;
+    if (!ourReceive) {
+      ourReceive = function (raw) {
+        ingestNativeEnvelope(raw);
+        if (typeof prevReceive === "function" && prevReceive !== ourReceive && !isOwnHandle(prevReceive)) {
+          try {
+            prevReceive(raw);
+          } catch (_) {}
+        }
+      };
+    }
+    installOnWindow(global);
+    installMessageHook();
+    try {
+      if (global.parent && global.parent !== global) installOnWindow(global.parent);
+    } catch (_) {}
+    try {
+      if (global.top && global.top !== global) installOnWindow(global.top);
+    } catch (_) {}
+  }
+
+  function startHookWatch() {
+    installBridgeHooks();
+    if (hookTimer) return;
+    hookTimer = global.setInterval(function () {
+      installBridgeHooks();
+    }, 400);
+  }
+
+  function on(eventName, handler) {
+    startHookWatch();
+    if (!hostListeners[eventName]) hostListeners[eventName] = [];
+    hostListeners[eventName].push(handler);
+    return function () {
+      var list = hostListeners[eventName];
+      if (!list) return;
+      for (var i = list.length - 1; i >= 0; i--) {
+        if (list[i] === handler) list.splice(i, 1);
+      }
+    };
+  }
+
+  function invokeImmediate(method, data) {
+    startHookWatch();
+    if (!hasNativeBridge()) {
+      throw new Error("Bridge not available");
+    }
+    var id = Date.now() + "_" + Math.random().toString(36).slice(2, 9);
+    postToNative(
+      JSON.stringify({
+        type: "request",
+        id: id,
+        method: method,
+        data: data || {},
+        callbackSig: id
+      })
+    );
+  }
+
+  function parsePayload(raw) {
+    var payload = asObject(raw);
+    if (!payload) return {};
+
+    var nested = null;
+    if (payload.params != null) nested = asObject(payload.params) || payload.params;
+    if (!nested && payload.data != null) nested = asObject(payload.data) || payload.data;
+    if (!nested && payload.payload != null) nested = asObject(payload.payload) || payload.payload;
+    if (!nested || typeof nested !== "object") nested = {};
+
+    var callbackName = payload.callbackName || nested.callbackName || "";
+    var errCode = nested.errCode != null ? nested.errCode : payload.errCode;
+    var errMsg =
+      nested.errMsg ||
+      nested.errMessage ||
+      payload.errMsg ||
+      payload.message ||
+      "";
+    var rewardStatus = payload.rewardStatus;
+    if (rewardStatus == null) rewardStatus = nested.rewardStatus;
+
+    return {
+      callbackName: String(callbackName || ""),
+      errCode: errCode,
+      errMsg: String(errMsg || ""),
+      rewardStatus: rewardStatus
+    };
+  }
+
+  function messageForCode(code, fallback) {
+    var key = code == null ? "" : String(code);
+    var numeric = Number(key);
+    if (ERR_MESSAGES[numeric]) return ERR_MESSAGES[numeric];
+    if (fallback) return fallback;
+    return "观看视频失败，请重试";
+  }
+
+  function failResult(code, message) {
+    return {
+      ok: false,
+      code: code == null ? "REWARD_FLOW_FAILED" : String(code),
+      message: messageForCode(code, message)
+    };
+  }
+
+  function isPending() {
+    return currentSettle != null;
+  }
+
+  function showRewardedVideo(options) {
+    options = options || {};
+    var forwardSource = options.forward_source || options.forwardSource || "";
+
+    if (currentSettle) {
+      return Promise.resolve(failResult(2005));
+    }
+
+    if (!hasNativeBridge()) {
+      return Promise.resolve(failResult("APP_REQUIRED", "请在 App 内观看广告"));
+    }
+
+    startHookWatch();
+
+    return new Promise(function (resolve) {
+      var settled = false;
+      var off = function () {};
+
+      function settle(result) {
+        if (settled) return;
+        settled = true;
+        currentSettle = null;
+        off();
+        resolve(result);
+      }
+
+      currentSettle = settle;
+      off = on(STATUS_EVENT, function (payload) {
+        var ev = parsePayload(payload);
+        var name = ev.callbackName;
+
+        if (name === "onBusy") {
+          settle(failResult(2005));
+          return;
+        }
+        if (name === "onRewardArrived") {
+          settle({ ok: true });
+          return;
+        }
+        if (name === "onLoadError" || name === "onShowError") {
+          settle(failResult(ev.errCode != null ? ev.errCode : "REWARD_FLOW_FAILED", ev.errMsg));
+          return;
+        }
+        if (name === "onClose") {
+          if (ev.rewardStatus === true) {
+            settle({ ok: true });
+            return;
+          }
+          settle(failResult("NOT_REWARDED", "需看完视频才能获得奖励"));
+        }
+      });
+
+      try {
+        var invokeData = {};
+        if (forwardSource) invokeData.forward_source = forwardSource;
+        invokeImmediate(METHOD_AD, invokeData);
+      } catch (err) {
+        settle(
+          failResult("UNAVAILABLE", err && err.message ? err.message : "激励视频调用失败")
+        );
+      }
+    });
+  }
+
+  startHookWatch();
+
+  var api = {
+    isAvailable: hasNativeBridge,
+    isPending: isPending,
+    showRewardedVideo: showRewardedVideo
+  };
+
+  global.__HOORAH_LAMPS_BRIDGE__ = api;
+  global.__HOORAH_LAMPS_REWARD_AD__ = api;
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+<script>
+/* ===== lamps-platform：游戏入口，只暴露 showRewardedVideo 与 forward_source 所需 id ===== */
+(function (global) {
+  "use strict";
+
+  var sessionId = null;
+
+  function bridge() {
+    return global.__HOORAH_LAMPS_BRIDGE__;
+  }
+
+  function absorbQuery(bag, raw) {
+    if (!raw) return;
+    try {
+      var text = String(raw);
+      if (text.charAt(0) === "?") text = text.slice(1);
+      if (!text) return;
+      var params = new URLSearchParams(text);
+      params.forEach(function (value, key) {
+        if (bag[key] == null || String(bag[key]).trim() === "") {
+          bag[key] = value;
+        }
+      });
+    } catch (e) {}
+  }
+
+  function readQueryBag() {
+    var bag = {};
+    try {
+      absorbQuery(bag, global.location && global.location.search);
+    } catch (e) {}
+    try {
+      var hash = String((global.location && global.location.hash) || "");
+      var qIndex = hash.indexOf("?");
+      if (qIndex >= 0) absorbQuery(bag, hash.slice(qIndex));
+    } catch (e) {}
+    return bag;
+  }
+
+  function qs(name) {
+    var bag = readQueryBag();
+    return Object.prototype.hasOwnProperty.call(bag, name) ? bag[name] : null;
+  }
+
+  function isMockEnabled() {
+    if (global.__HOORAH_AD_UNLOCK_MOCK__ === true) return true;
+    var v = qs("adUnlockMock") || qs("ad_unlock_mock");
+    return v === "1" || v === "true";
+  }
+
+  function nonempty(value) {
+    if (value == null) return "";
+    return String(value).trim();
+  }
+
+  function firstNonempty(values) {
+    for (var i = 0; i < values.length; i++) {
+      var text = nonempty(values[i]);
+      if (text) return text;
+    }
+    return "";
+  }
+
+  function getPublishedGameId() {
+    var config = global.LAMPS_CONFIG || {};
+    var workSessionId = firstNonempty([
+      qs("workSessionId"),
+      qs("worksSessionId"),
+      config.workSessionId
+    ]);
+    if (workSessionId) return workSessionId;
+    return firstNonempty([
+      qs("gameId"),
+      qs("miniGameId"),
+      qs("mini_game_id"),
+      config.gameId,
+      global.__LAMPS_GAME_ID__
+    ]);
+  }
+
+  function hasPublishedGameId() {
+    return !!getPublishedGameId();
+  }
+
+  function getSessionId() {
+    if (sessionId) return sessionId;
+    sessionId = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx".replace(/x/g, function () {
+      return Math.floor(Math.random() * 16).toString(16);
+    });
+    return sessionId;
+  }
+
+  function getForwardSource(source) {
+    var sourceId = getPublishedGameId();
+    if (!sourceId) return "";
+    var pre = source || "None";
+    return sourceId + ":" + getSessionId() + ":" + pre;
+  }
+
+  function isAvailable() {
+    var b = bridge();
+    return !!(b && typeof b.isAvailable === "function" && b.isAvailable());
+  }
+
+  function isPending() {
+    var b = bridge();
+    return !!(b && typeof b.isPending === "function" && b.isPending());
+  }
+
+  function showRewardedVideo(options) {
+    options = options || {};
+    if (!hasPublishedGameId()) {
+      return Promise.resolve({
+        ok: false,
+        code: "GAME_ID_REQUIRED",
+        message: "缺少 gameId 或 workSessionId，无法播放激励视频"
+      });
+    }
+    var b = bridge();
+    if (!b || typeof b.showRewardedVideo !== "function") {
+      return Promise.resolve({
+        ok: false,
+        code: "UNAVAILABLE",
+        message: "激励视频暂不可用"
+      });
+    }
+    if (isMockEnabled() && !isAvailable()) {
+      console.info("[LampsPlatform] showRewardedVideo mock ok");
+      return Promise.resolve({ ok: true });
+    }
+    var forward =
+      options.forward_source ||
+      options.forwardSource ||
+      getForwardSource(options.source);
+    if (!forward) {
+      return Promise.resolve({
+        ok: false,
+        code: "GAME_ID_REQUIRED",
+        message: "缺少 gameId 或 workSessionId，无法播放激励视频"
+      });
+    }
+    return b.showRewardedVideo({ forward_source: forward });
+  }
+
+  global.LampsPlatform = {
+    getGameId: getPublishedGameId,
+    getPublishedGameId: getPublishedGameId,
+    hasPublishedGameId: hasPublishedGameId,
+    getSessionId: getSessionId,
+    getForwardSource: getForwardSource,
+    isAvailable: isAvailable,
+    isPending: isPending,
+    showRewardedVideo: showRewardedVideo,
+    bridge: bridge
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+    <script src="./lamps-progress-bridge.js"></script>
+    <script src="./lamps-progress-platform.js"></script>
+    <script src="./lamps-progress-sync.js"></script>
+    
+</body>
+</html>
